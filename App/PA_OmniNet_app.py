@@ -41,7 +41,7 @@ if input_image and context_size > 0:
     output_image = process_images(input_image_path, context_in_dir, context_out_dir, context_size)
 
     st.subheader("Output Image:")
-    st.image(output_image, use_column_width=True, clamp=True, channels="RGB")
+    st.image(output_image, use_container_width=True, clamp=True, channels="RGB")
 
     os.remove(input_image_path)
     for temp_dir in [context_in_dir, context_out_dir]:
