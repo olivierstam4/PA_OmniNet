@@ -1,6 +1,6 @@
 import os
 from PIL import Image
-from testing_model import LightningModel
+from App_model import LightningModel
 from helper_functions import *
 import cv2
 
