@@ -1,0 +1,58 @@
+import os
+from PIL import Image
+from testing_model import LightningModel
+from helper_functions import *
+import cv2
+
+model_pth_Semi_Neuralizer = '../final_model_weight/Neuralizer/final_model_semifinalpatient_early.pth'
+hparams = {
+    "batch_size": 32,
+    "learning_rate": 1e-4,
+    "nb_levels": 4,
+    "nb_inner_channels": 32,
+    "nb_conv_layers_per_stage": 2,
+    "data_slice_only": True,
+    "max_epochs": 250,
+}
+
+Neuralizer_Semi = LightningModel(hparams)
+state_dict = torch.load(model_pth_Semi_Neuralizer, map_location=torch.device('cpu'))
+Neuralizer_Semi.load_state_dict(state_dict)
+Neuralizer_Semi.eval()
+torch.set_grad_enabled(False)
+
+def preprocess_app(image, size=(256, 256)):
+    image = np.array(image)
+    image = (image - image.min()) / (image.max() - image.min())
+    image = cv2.resize(image, size, interpolation=cv2.INTER_LINEAR)
+    image = np.stack([image] * 3, axis=-1)
+    image = torch.tensor(image)
+    image = image.unsqueeze(0)
+    image = image.permute(0, 3, 1, 2).float()
+    return image
+
+def preprocess_context_app(directory, context_size):
+    images = []
+    for i, file in enumerate(sorted(os.listdir(directory))):
+        if i >= context_size:
+            break
+        if file.endswith(".png"):
+            img_path = os.path.join(directory, file)
+            image = Image.open(img_path).convert('L')
+            image = np.array(image)
+            image = preprocess_app(image)
+            images.append(image)
+    return torch.cat(images, dim=0)
+
+def process_images(input_image_path, context_in_dir, context_out_dir, context_size):
+    input_image = Image.open(input_image_path).convert('L')
+    input_image = np.array(input_image)
+    input_image_tensor = preprocess_app(input_image).unsqueeze(0)
+    context_in_tensor = preprocess_context_app(context_in_dir,
+                                               context_size).unsqueeze(0)
+    context_out_tensor = preprocess_context_app(context_out_dir,
+                                                context_size).unsqueeze(0)
+    output_tensor = Neuralizer_Semi.forward(input_image_tensor, context_in_tensor, context_out_tensor)
+    output_image = output_tensor.squeeze().permute(1, 2, 0).detach().cpu().numpy()
+    output_image = (output_image - output_image.min()) / (output_image.max() - output_image.min())
+    return output_image

@@ -1,0 +1,7 @@
+batch_size: 1
+data_slice_only: true
+learning_rate: 0.0001
+max_epochs: 50
+nb_conv_layers_per_stage: 2
+nb_inner_channels: 32
+nb_levels: 4
