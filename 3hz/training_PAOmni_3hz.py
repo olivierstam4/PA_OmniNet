@@ -1,6 +1,6 @@
 import pytorch_lightning as pl
-from PA_OmniNet.models.pairwise_conv_avg_model import PairwiseConvAvgModel
-from PA_OmniNet.util.shapecheck import ShapeChecker
+from models.pairwise_conv_avg_model import PairwiseConvAvgModel
+from util.shapecheck import ShapeChecker
 import torch
 import torch.nn.functional as F
 import h5py
@@ -16,7 +16,7 @@ from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
 
-def preprocess_mat_Neuralizer(image, size=(256, 256)):
+def preprocess_3hz(image, size=(256, 256)):
     image = (image - image.min()) / (image.max() - image.min())
     image = np.stack([image] * 3, axis=-1)
     image = torch.tensor(image)
@@ -24,18 +24,20 @@ def preprocess_mat_Neuralizer(image, size=(256, 256)):
     image = image.permute(0, 3, 1, 2).float()
     return image
 
-def preprocess_batch_Neuralizer(images, size=(256, 256)):
+def preprocess_batch_3hz(images, size=(256, 256)):
     processed_images = []
     for image in images:
-        processed_image = preprocess_mat_Neuralizer(image, size)
+        processed_image = preprocess_3hz(image, size)
         processed_images.append(processed_image)
     return torch.cat(processed_images, dim=0)
+
 def data_loader_formatter(filepath):
     data = np.load(filepath)
     data_in = data['arr_0']
     data_out = data['arr_1']
     return data_in, data_out
-class CustomH5Dataset(Dataset):
+
+class Dataloader3hz(Dataset):
     def __init__(self, data_in, data_out, context_size=16):
         self.context_size = context_size
         self.data_in = data_in
@@ -46,22 +48,18 @@ class CustomH5Dataset(Dataset):
         return len(self.data_in)
 
     def __getitem__(self, idx):
-        X = preprocess_mat_Neuralizer(self.data_in[idx])
-        y = preprocess_mat_Neuralizer(self.data_out[idx])
+        X = preprocess_3hz(self.data_in[idx])
+        y = preprocess_3hz(self.data_out[idx])
 
         context_in = [self.data_in[(idx + 1 + i) % len(self.data_in)] for i in range(self.context_size)]
         context_out = [self.data_out[(idx + 1 + i) % len(self.data_out)] for i in range(self.context_size)]
 
-        X_context = preprocess_batch_Neuralizer(context_in)
-        y_context = preprocess_batch_Neuralizer(context_out)
+        X_context = preprocess_batch_3hz(context_in)
+        y_context = preprocess_batch_3hz(context_out)
 
         return X.squeeze(), y.squeeze(), X_context, y_context
 
 class LightningModel(pl.LightningModule):
-    def __init__(self, hparams):
-        super().__init__()
-        self.save_hyperparameters(hparams)
-        self.model = self._build_model()
     def __init__(self, hparams):
         super().__init__()
         self.save_hyperparameters(hparams)
@@ -156,9 +154,9 @@ if __name__ == "__main__":
     val_in, val_out = data_loader_formatter(val_path_multi)
     test_in, test_out = data_loader_formatter(test_path_multi)
 
-    train_dataset = CustomH5Dataset(train_in, train_out, context_size=CONTEXT_SIZE)
-    val_dataset = CustomH5Dataset(val_in, val_out, context_size=CONTEXT_SIZE)
-    test_dataset = CustomH5Dataset(test_in, test_out, context_size=CONTEXT_SIZE)
+    train_dataset = Dataloader3hz(train_in, train_out, context_size=CONTEXT_SIZE)
+    val_dataset = Dataloader3hz(val_in, val_out, context_size=CONTEXT_SIZE)
+    test_dataset = Dataloader3hz(test_in, test_out, context_size=CONTEXT_SIZE)
 
     train_loader = DataLoader(train_dataset, batch_size=hparams['batch_size'], shuffle=True, num_workers=4, persistent_workers=True)
     val_loader = DataLoader(val_dataset, batch_size=hparams['batch_size'], shuffle=False, num_workers=4, persistent_workers=True)
