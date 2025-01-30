@@ -4,7 +4,7 @@ from App_model import LightningModel
 from helper_functions import *
 import cv2
 
-model_weights = '../final_model_weight/Neuralizer/final_model_semifinalpatient_early.pth'
+model_weights = '../final_model_weight/PAOmniNet/PA_OmniNet_Generalized.pth'
 hparams = {
     "batch_size": 32,
     "learning_rate": 1e-4,
@@ -15,10 +15,10 @@ hparams = {
     "max_epochs": 250,
 }
 
-Neuralizer_Semi = LightningModel(hparams)
+App_model = LightningModel(hparams)
 state_dict = torch.load(model_weights, map_location=torch.device('cpu'))
-Neuralizer_Semi.load_state_dict(state_dict)
-Neuralizer_Semi.eval()
+App_model.load_state_dict(state_dict)
+App_model.eval()
 torch.set_grad_enabled(False)
 
 def preprocess_app(image, size=(256, 256)):
@@ -52,7 +52,7 @@ def process_images(input_image_path, context_in_dir, context_out_dir, context_si
                                                context_size).unsqueeze(0)
     context_out_tensor = preprocess_context_app(context_out_dir,
                                                 context_size).unsqueeze(0)
-    output_tensor = Neuralizer_Semi.forward(input_image_tensor, context_in_tensor, context_out_tensor)
+    output_tensor = App_model.forward(input_image_tensor, context_in_tensor, context_out_tensor)
     output_image = output_tensor.squeeze().permute(1, 2, 0).detach().cpu().numpy()
     output_image = (output_image - output_image.min()) / (output_image.max() - output_image.min())
     return output_image
