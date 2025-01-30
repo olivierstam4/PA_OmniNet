@@ -4,7 +4,6 @@ import torch
 import numpy as np
 import cv2
 
-
 def get_info(file_path):
 
     keys_list = []

@@ -1,3 +1,5 @@
+## cd to file dir and run command: > streamlit run PA_OmniNet_app.py
+
 import os
 import torch
 import numpy as np

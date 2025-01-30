@@ -9,6 +9,7 @@ from torch.utils.data import Dataset, DataLoader
 import logging
 import csv
 from torchmetrics.image import StructuralSimilarityIndexMeasure
+
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 ssim = StructuralSimilarityIndexMeasure().to(DEVICE)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
@@ -32,7 +33,7 @@ def preprocess_context(context_in, context_out):
     return context_in_preprocessed, context_out_preprocessed
 
 
-class CustomH5Dataset(Dataset):
+class OADATDataLoader(Dataset):
     def __init__(self, file_path, context_size=4, input_key=None,
                  output_key=None, patient_ids=None):
         super().__init__()
@@ -76,7 +77,6 @@ class LightningModel(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters(hparams)
 
-        # build model
         self.net = PairwiseConvAvgModel(
             dim=2 if self.hparams.data_slice_only else 3,
             stages=self.hparams.nb_levels,
@@ -96,68 +96,3 @@ class LightningModel(pl.LightningModule):
         sc.check(y_pred, "B C H W")
 
         return y_pred
-
-    def on_test_start(self):
-        self.csv_file = "neuralizer32_context4.csv"
-        with open(self.csv_file, mode="w", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerow(["Index", "SSIM", "RMSE", "PSNR"])
-
-    def test_step(self, batch, batch_idx):
-        target_in, y, context_in, context_out = batch
-        y_pred = self(target_in, context_in, context_out)
-        logging.info(f"{y.shape}, {y_pred.shape}")
-        DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-        ssim = StructuralSimilarityIndexMeasure().to(DEVICE)
-        ssim_val = ssim(y_pred, y)
-        rmse_val = compute_rmse(y_pred, y)
-        psnr_val = compute_psnr(y_pred, y)
-
-        with open(self.csv_file, mode="a", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerow([batch_idx, ssim_val, rmse_val, psnr_val])
-
-        self.log("test_ssim", ssim_val, prog_bar=True)
-        self.log("test_rmse", rmse_val, prog_bar=True)
-        self.log("test_psnr", psnr_val, prog_bar=True)
-
-if __name__ == "__main__":
-    model_path = "/gpfs/home3/ostam/export_snellius/neuralizer/checkpoints/Neur4_patientSemi_final-epoch=49-val_loss=0.0011.ckpt"
-    #file_path = "/gpfs/scratch1/shared/tmp.zlixKwrks6/SWFD_semicircle_RawBP.h5"
-    file_path = "/gpfs/home3/ostam/Datasets/oadat/swfd/SWFD_semicircle_RawBP-mini.h5"
-    batch_size = 1
-    input_key = "sc,ss32_BP"
-    output_key = "sc_BP"
-    model = LightningModel.load_from_checkpoint(model_path)
-    DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-    ssim = StructuralSimilarityIndexMeasure().to(DEVICE)
-    model.eval()
-
-    with h5py.File(file_path, 'r') as h5_file:
-        patient_ids = h5_file['patientID'][:]
-        total_patient_ids = sorted(set(map(int, patient_ids)))
-
-    test_patient_ids = total_patient_ids[-2:]
-    val_patient_ids = total_patient_ids[-4:-2]
-    train_patient_ids = total_patient_ids[:-4]
-    logging.info(f"Different patients: {total_patient_ids} \nTraining on patients {train_patient_ids}\nValidating on patients {val_patient_ids}\nTesting on patients       {test_patient_ids} ")
-
-    logging.info(f"Training IDs: {train_patient_ids}")
-    logging.info(f"Validation IDs: {val_patient_ids}")
-    logging.info(f"Testing IDs: {test_patient_ids}")
-
-    test_dataset = CustomH5Dataset(file_path, input_key=input_key,
-                                   output_key=output_key, context_size=1,
-                                   patient_ids=test_patient_ids)
-
-    test_loader = DataLoader(
-        test_dataset, batch_size=1, shuffle=False,
-        num_workers=12, persistent_workers=True
-    )
-
-    trainer = pl.Trainer(
-        accelerator='gpu' if torch.cuda.is_available() else 'cpu',
-        logger=False
-    )
-    test_results = trainer.test(model, test_loader)
-    logging.info(f"Test results: {test_results}")

@@ -4,7 +4,7 @@ from App_model import LightningModel
 from helper_functions import *
 import cv2
 
-model_pth_Semi_Neuralizer = '../final_model_weight/Neuralizer/final_model_semifinalpatient_early.pth'
+model_weights = '../final_model_weight/Neuralizer/final_model_semifinalpatient_early.pth'
 hparams = {
     "batch_size": 32,
     "learning_rate": 1e-4,
@@ -16,7 +16,7 @@ hparams = {
 }
 
 Neuralizer_Semi = LightningModel(hparams)
-state_dict = torch.load(model_pth_Semi_Neuralizer, map_location=torch.device('cpu'))
+state_dict = torch.load(model_weights, map_location=torch.device('cpu'))
 Neuralizer_Semi.load_state_dict(state_dict)
 Neuralizer_Semi.eval()
 torch.set_grad_enabled(False)
