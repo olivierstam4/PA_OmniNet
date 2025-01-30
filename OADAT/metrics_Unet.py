@@ -73,7 +73,7 @@ class HDF5Dataset(Dataset):
 
 
 
-#class HDF5Dataset(Dataset):
+#class DataloaderMouse(Dataset):
 #     def __init__(self, input_file_path, output_file_path, input_key, output_key, indices, normalize=True):
 #         """
 #         Initialize the dataset with specified HDF5 files, keys, and indices.
@@ -145,7 +145,7 @@ test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False,
 # test_indices = np.arange(train_split + val_split, total_samples)
 # logging.info(f"Dataset split: {len(train_indices)} train, {len(val_indices)} val, {len(test_indices)} test")
 # BATCH_SIZE = 1
-# test_dataset = HDF5Dataset(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY, OUTPUT_KEY, test_indices)
+# test_dataset = DataloaderMouse(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY, OUTPUT_KEY, test_indices)
 # test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=6)
 logging.info("Processing the dataset and computing metrics...")
 with open(CSV_OUTPUT_PATH, mode="w", newline="") as file:

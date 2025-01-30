@@ -45,7 +45,7 @@ CSV_OUTPUT_PATH = "metricsSemi_on_MFSDearly.csv"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 ssim = StructuralSimilarityIndexMeasure().to(DEVICE)
 
-# class HDF5Dataset(Dataset):
+# class DataloaderMouse(Dataset):
 #     def __init__(self, input_file_path, output_file_path, input_key, output_key, patient_ids=None, normalize=True):
 #         self.input_file_path = input_file_path
 #         self.output_file_path = output_file_path
@@ -132,7 +132,7 @@ model.eval()
 #train_patient_ids = sorted_patient_ids[:-4]
 #logging.info(f"Different patients: {sorted_patient_ids} \nTraining on patients {train_patient_ids}\nValidating on patients {val_patient_ids}\nTesting on patients       {test_patient_ids} ")
 
-#test_dataset = HDF5Dataset(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY,
+#test_dataset = DataloaderMouse(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY,
 #                           OUTPUT_KEY, patient_ids=test_patient_ids)
 
 #test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False,

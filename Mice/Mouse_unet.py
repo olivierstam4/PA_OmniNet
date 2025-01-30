@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 import h5py
 import os
-from PA_OmniNet.unet1 import UNet
+from unet1 import UNet
 import logging
 from tqdm import tqdm
 import numpy as np
@@ -23,11 +23,11 @@ console_handler.setFormatter(
 logger = logging.getLogger()
 logger.addHandler(console_handler)
 
-# mice = ['../Datasets/optoacousticsparse/mice_sparse16_recon_256.mat', '../Datasets/optoacousticsparse/mice_sparse32_recon_256.mat', '../Datasets/optoacousticsparse/mice_sparse128_recon_256.mat']
-# phantom = ['../Datasets/optoacousticsparse/v_phantom_sparse16_recon_256.mat', '../Datasets/optoacousticsparse/v_phantom_sparse32_recon_256.mat', '../Datasets/optoacousticsparse/v_phantom_full_recon_256.mat']
-# v_phantom = ['../Datasets/optoacousticsparse/phantom_sparse16_recon_256.mat', '../Datasets/optoacousticsparse/phantom_sparse32_recon_256.mat', '../Datasets/optoacousticsparse/phantom_full_recon_256.mat']
-HDF5_INPUT_PATH = '../Datasets/optoacousticsparse/mice_sparse16_recon_256.mat'
-HDF5_OUTPUT_PATH = '../Datasets/optoacousticsparse/mice_sparse128_recon_256.mat'
+# mice = ['../../Datasets/optoacousticsparse/mice_sparse16_recon_256.mat', '../../Datasets/optoacousticsparse/mice_sparse32_recon_256.mat', '../../Datasets/optoacousticsparse/mice_sparse128_recon_256.mat']
+# phantom = ['../../Datasets/optoacousticsparse/v_phantom_sparse16_recon_256.mat', '../../Datasets/optoacousticsparse/v_phantom_sparse32_recon_256.mat', '../../Datasets/optoacousticsparse/v_phantom_full_recon_256.mat']
+# v_phantom = ['../../Datasets/optoacousticsparse/phantom_sparse16_recon_256.mat', '../../Datasets/optoacousticsparse/phantom_sparse32_recon_256.mat', '../../Datasets/optoacousticsparse/phantom_full_recon_256.mat']
+HDF5_INPUT_PATH = '../../Datasets/optoacousticsparse/mice_sparse16_recon_256.mat'
+HDF5_OUTPUT_PATH = '../../Datasets/optoacousticsparse/mice_sparse128_recon_256.mat'
 GAMMA = 0.98
 MOMENTUM = 0.9
 STEP_SIZE = 1
@@ -62,7 +62,7 @@ num_workers = int(num_workers)
 # logger.info(f"Num workers: {num_workers}")
 
 
-class HDF5Dataset(Dataset):
+class DataloaderMouse(Dataset):
     def __init__(self, input_file_path, output_file_path, input_key=None,
                  output_key=None,
                  indices=None, normalize=True):
@@ -74,7 +74,6 @@ class HDF5Dataset(Dataset):
             input_size = len(infile[self.input_key])
         self.indices = indices if indices is not None else list(
             range(input_size))
-        # Determine the keys if not provided
         with h5py.File(input_file_path, 'r') as infile:
             self.input_key = input_key or list(infile.keys())[0]
 
@@ -100,13 +99,11 @@ class HDF5Dataset(Dataset):
                              dtype=torch.float32).unsqueeze(0)
 
             if self.normalize:
-                # Normalize and resize input
                 x = (x - x.min()) / (x.max() - x.min() + 1e-8)
                 # x = cv2.resize(x.numpy().squeeze(0), (256, 256),
                 #                interpolation=cv2.INTER_LINEAR)
                 # x = torch.tensor(x).unsqueeze(0)
 
-                # Normalize and resize output
                 y = (y - y.min()) / (y.max() - y.min() + 1e-8)
                 # y = cv2.resize(y.numpy().squeeze(0), (256, 256),
                 #                interpolation=cv2.INTER_LINEAR)
@@ -117,8 +114,7 @@ if __name__ == '__main__':
     EARLY_STOPPING_PATIENCE = 50
     best_val_loss = float('inf')
     early_stop_counter = 0
-
-    dataset = HDF5Dataset(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, normalize=True)
+    dataset = DataloaderMouse(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, normalize=True)
     size = len(dataset)
     indices = np.arange(size)
 
@@ -130,9 +126,9 @@ if __name__ == '__main__':
 
     logger.info(f"Dataset split: {len(train_indices)} train, {len(val_indices)} val, {len(test_indices)} test")
 
-    train_dataset = HDF5Dataset(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, indices=train_indices, normalize=True)
-    val_dataset = HDF5Dataset(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, indices=val_indices, normalize=True)
-    test_dataset = HDF5Dataset(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, indices=test_indices, normalize=True)
+    train_dataset = DataloaderMouse(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, indices=train_indices, normalize=True)
+    val_dataset = DataloaderMouse(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, indices=val_indices, normalize=True)
+    test_dataset = DataloaderMouse(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, indices=test_indices, normalize=True)
 
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=num_workers)
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=num_workers)

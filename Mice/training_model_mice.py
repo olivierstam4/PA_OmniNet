@@ -1,6 +1,6 @@
 import pytorch_lightning as pl
-from PA_OmniNet.models.pairwise_conv_avg_model import PairwiseConvAvgModel
-from PA_OmniNet.util.shapecheck import ShapeChecker
+from models.pairwise_conv_avg_model import PairwiseConvAvgModel
+from util.shapecheck import ShapeChecker
 import torch
 import torch.nn.functional as F
 import h5py
@@ -16,19 +16,19 @@ from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
 
-def preprocess_mat(image):
+def preprocess_mouse(image):
     image = (image - image.min()) / (image.max() - image.min())
     image = np.stack([image] * 3, axis=-1)
     image = torch.tensor(image).unsqueeze(0).permute(0, 3, 1, 2).float()
     return image
 
 
-def preprocess_batch(images):
-    processed_images = [preprocess_mat(image) for image in images]
+def preprocess_mouse_batch(images):
+    processed_images = [preprocess_mouse(image) for image in images]
     return torch.cat(processed_images, dim=0)
 
 
-def data_loader_formatter_mat(in_filepath, out_filepath):
+def data_loader_form_mouse(in_filepath, out_filepath):
     with h5py.File(in_filepath, 'r') as infile:
         first_key = list(infile.keys())[0]
         data_in = infile[first_key][()]
@@ -39,7 +39,7 @@ def data_loader_formatter_mat(in_filepath, out_filepath):
 
     return data_in, data_out
 
-class CustomH5Dataset(Dataset):
+class DataloaderMouse(Dataset):
     def __init__(self, data_in, data_out, context_size=16):
         self.context_size = context_size
         self.data_in = data_in
@@ -51,22 +51,18 @@ class CustomH5Dataset(Dataset):
         return len(self.data_in)
 
     def __getitem__(self, idx):
-        X = preprocess_mat(self.data_in[idx])
-        y = preprocess_mat(self.data_out[idx])
+        X = preprocess_mouse(self.data_in[idx])
+        y = preprocess_mouse(self.data_out[idx])
         context_in = [self.data_in[(idx + 1 + i) % len(self.data_in)] for i in
                       range(self.context_size)]
         context_out = [self.data_out[(idx + 1 + i) % len(self.data_out)] for i
                        in range(self.context_size)]
-        X_context = preprocess_batch(context_in)
-        y_context = preprocess_batch(context_out)
+        X_context = preprocess_mouse_batch(context_in)
+        y_context = preprocess_mouse_batch(context_out)
 
         return X.squeeze(), y.squeeze(), X_context, y_context
 
 class LightningModel(pl.LightningModule):
-    def __init__(self, hparams):
-        super().__init__()
-        self.save_hyperparameters(hparams)
-        self.model = self._build_model()
     def __init__(self, hparams):
         super().__init__()
         self.save_hyperparameters(hparams)
@@ -164,8 +160,8 @@ if __name__ == "__main__":
 
     input_file_path = mice[1]
     output_file_path = mice[2]
-    data_in, data_out = data_loader_formatter_mat(input_file_path,
-                                                  output_file_path)
+    data_in, data_out = data_loader_form_mouse(input_file_path,
+                                               output_file_path)
 
     total_samples = data_in.shape[0]
     indices = np.arange(total_samples)
@@ -176,9 +172,9 @@ if __name__ == "__main__":
     val_indices = indices[train_end:val_end]
     test_indices = indices[val_end:]
 
-    train_dataset = CustomH5Dataset(data_in[train_indices], data_out[train_indices], context_size=CONTEXT_SIZE)
-    val_dataset = CustomH5Dataset(data_in[val_indices], data_out[val_indices], context_size=CONTEXT_SIZE)
-    test_dataset = CustomH5Dataset(data_in[test_indices], data_out[test_indices], context_size=CONTEXT_SIZE)
+    train_dataset = DataloaderMouse(data_in[train_indices], data_out[train_indices], context_size=CONTEXT_SIZE)
+    val_dataset = DataloaderMouse(data_in[val_indices], data_out[val_indices], context_size=CONTEXT_SIZE)
+    test_dataset = DataloaderMouse(data_in[test_indices], data_out[test_indices], context_size=CONTEXT_SIZE)
 
     train_loader = DataLoader(train_dataset, batch_size=hparams['batch_size'], shuffle=True, num_workers=4, persistent_workers=True)
     val_loader = DataLoader(val_dataset, batch_size=hparams['batch_size'], shuffle=False, num_workers=4, persistent_workers=True)
