@@ -4,8 +4,8 @@ from skimage.metrics import structural_similarity as ssim
 import math
 import torch
 from torch.utils.data import DataLoader, Dataset
-from PA_OmniNet.unet1 import UNet
-from PA_OmniNet.testing_functions import compute_rmse, compute_psnr
+from unet1 import UNet
+from testing_functions import compute_rmse, compute_psnr
 import csv
 import logging
 from torchmetrics.image import StructuralSimilarityIndexMeasure
@@ -38,7 +38,7 @@ CSV_OUTPUT_PATH = "metricsSemi_on_MFSDearly.csv"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 ssim = StructuralSimilarityIndexMeasure().to(DEVICE)
 
-class HDF5Dataset(Dataset):
+class OADATDataloader(Dataset):
     def __init__(self, input_file_path, output_file_path, input_key, output_key, patient_ids=None, normalize=True):
         self.input_file_path = input_file_path
         self.output_file_path = output_file_path
@@ -73,7 +73,7 @@ class HDF5Dataset(Dataset):
 
 
 
-#class DataloaderMouse(Dataset):
+#class OADATDataloader(Dataset):
 #     def __init__(self, input_file_path, output_file_path, input_key, output_key, indices, normalize=True):
 #         """
 #         Initialize the dataset with specified HDF5 files, keys, and indices.
@@ -130,8 +130,8 @@ val_patient_ids = sorted_patient_ids[-4:-2]
 train_patient_ids = sorted_patient_ids[:-4]
 logging.info(f"Different patients: {sorted_patient_ids} \nTraining on patients {train_patient_ids}\nValidating on patients {val_patient_ids}\nTesting on patients       {test_patient_ids} ")
 
-test_dataset = HDF5Dataset(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY,
-                           OUTPUT_KEY, patient_ids=test_patient_ids)
+test_dataset = OADATDataloader(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY,
+                               OUTPUT_KEY, patient_ids=test_patient_ids)
 
 test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False,
                             num_workers=6, persistent_workers=True)
@@ -145,7 +145,7 @@ test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False,
 # test_indices = np.arange(train_split + val_split, total_samples)
 # logging.info(f"Dataset split: {len(train_indices)} train, {len(val_indices)} val, {len(test_indices)} test")
 # BATCH_SIZE = 1
-# test_dataset = DataloaderMouse(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY, OUTPUT_KEY, test_indices)
+# test_dataset = OADATDataloader(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY, OUTPUT_KEY, test_indices)
 # test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=6)
 logging.info("Processing the dataset and computing metrics...")
 with open(CSV_OUTPUT_PATH, mode="w", newline="") as file:

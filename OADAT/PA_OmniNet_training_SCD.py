@@ -1,6 +1,6 @@
 import pytorch_lightning as pl
-from PA_OmniNet.models.pairwise_conv_avg_model import PairwiseConvAvgModel
-from PA_OmniNet.util.shapecheck import ShapeChecker
+from models.pairwise_conv_avg_model import PairwiseConvAvgModel
+from util.shapecheck import ShapeChecker
 import torch
 import torch.nn.functional as F
 import h5py
@@ -34,7 +34,7 @@ def preprocess_context(context_in, context_out):
     return context_in_preprocessed, context_out_preprocessed
 
 
-class CustomH5Dataset(Dataset):
+class OADATDataloader_SCD(Dataset):
     def __init__(self, input_file_path, output_file_path, context_size=4, 
                  input_key=None, output_key=None, split_indices=None):
         super().__init__()
@@ -181,11 +181,11 @@ if __name__ == "__main__":
     logging.info(f"Dataset split: {len(train_indices)} train, {len(val_indices)} val, {len(test_indices)} test")
 
     BATCH_SIZE = 32
-    train_dataset = CustomH5Dataset(file_path_in, file_path_out, input_key=input_key, output_key=output_key, split_indices=train_indices )
+    train_dataset = OADATDataloader_SCD(file_path_in, file_path_out, input_key=input_key, output_key=output_key, split_indices=train_indices)
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=6)
-    val_dataset = CustomH5Dataset(file_path_in, file_path_out, input_key=input_key, output_key=output_key, split_indices=val_indices)
+    val_dataset = OADATDataloader_SCD(file_path_in, file_path_out, input_key=input_key, output_key=output_key, split_indices=val_indices)
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=6)
-    test_dataset = CustomH5Dataset(file_path_in, file_path_out, input_key=input_key, output_key=output_key, split_indices=test_indices)
+    test_dataset = OADATDataloader_SCD(file_path_in, file_path_out, input_key=input_key, output_key=output_key, split_indices=test_indices)
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=6)
     logging.info(f"Train len {len(train_dataset)} val len {len(val_dataset)} val, {len(test_indices)} test")
 

@@ -1,7 +1,7 @@
-from PA_OmniNet.testing_functions import *
+from testing_functions import *
 import pytorch_lightning as pl
-from PA_OmniNet.models.pairwise_conv_avg_model import PairwiseConvAvgModel
-from PA_OmniNet.util.shapecheck import ShapeChecker
+from models.pairwise_conv_avg_model import PairwiseConvAvgModel
+from util.shapecheck import ShapeChecker
 import torch
 import h5py
 import numpy as np
@@ -32,7 +32,7 @@ def preprocess_context(context_in, context_out):
     return context_in_preprocessed, context_out_preprocessed
 
 
-class CustomH5Dataset(Dataset):
+class OADATDataloader(Dataset):
     def __init__(self, file_path, context_size=16, input_key=None,
                  output_key=None, patient_ids=None, context_patient_id=None):
         super().__init__()
@@ -207,7 +207,7 @@ if __name__ == "__main__":
     logging.info(f"Validation IDs: {val_patient_ids}")
     logging.info(f"Testing IDs: {test_patient_ids}")
 
-    test_dataset = CustomH5Dataset(
+    test_dataset = OADATDataloader(
         file_path=file_path,
         input_key=input_key,
         output_key=output_key,

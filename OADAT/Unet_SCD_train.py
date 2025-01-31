@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 import h5py
 import os
-from PA_OmniNet.unet1 import UNet
+from unet1 import UNet
 import logging
 from tqdm import tqdm
 import numpy as np
@@ -54,7 +54,7 @@ cpu_count = os.cpu_count()
 num_workers = cpu_count / 2
 num_workers = int(num_workers)
 
-class HDF5Dataset(Dataset):
+class OADATDataloader_SCD(Dataset):
     def __init__(self, input_file_path, output_file_path, input_key, output_key, indices, normalize=True):
         self.input_file_path = input_file_path
         self.output_file_path = output_file_path
@@ -93,9 +93,9 @@ if __name__ == '__main__':
     test_indices = np.arange(train_split + val_split, total_samples)
 
     logger.info(f"Dataset split: {len(train_indices)} train, {len(val_indices)} val, {len(test_indices)} test")
-    train_dataset = HDF5Dataset(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY, OUTPUT_KEY, train_indices)
-    val_dataset = HDF5Dataset(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY, OUTPUT_KEY, val_indices)
-    test_dataset = HDF5Dataset(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY, OUTPUT_KEY, test_indices)
+    train_dataset = OADATDataloader_SCD(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY, OUTPUT_KEY, train_indices)
+    val_dataset = OADATDataloader_SCD(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY, OUTPUT_KEY, val_indices)
+    test_dataset = OADATDataloader_SCD(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY, OUTPUT_KEY, test_indices)
 
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=num_workers)
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=num_workers)

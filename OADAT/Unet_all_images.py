@@ -4,8 +4,8 @@ from skimage.metrics import structural_similarity as ssim
 import math
 import torch
 from torch.utils.data import DataLoader, Dataset
-from PA_OmniNet.unet1 import UNet
-from PA_OmniNet.testing_functions import compute_rmse, compute_psnr
+from unet1 import UNet
+from testing_functions import compute_rmse, compute_psnr
 import csv
 import logging
 from torchmetrics.image import StructuralSimilarityIndexMeasure
@@ -79,7 +79,7 @@ ssim = StructuralSimilarityIndexMeasure().to(DEVICE)
 
 
 
-class HDF5Dataset(Dataset):
+class OADATDataloader(Dataset):
     def __init__(self, input_file_path, output_file_path, input_key, output_key, indices, normalize=True):
         self.input_file_path = input_file_path
         self.output_file_path = output_file_path
@@ -147,7 +147,7 @@ val_indices = np.arange(train_split, train_split + val_split)
 test_indices = np.arange(train_split + val_split, total_samples)
 logging.info(f"Dataset split: {len(train_indices)} train, {len(val_indices)} val, {len(test_indices)} test")
 BATCH_SIZE = 1
-test_dataset = HDF5Dataset(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY, OUTPUT_KEY, test_indices)
+test_dataset = OADATDataloader(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY, OUTPUT_KEY, test_indices)
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=6)
 import os
 import matplotlib.pyplot as plt

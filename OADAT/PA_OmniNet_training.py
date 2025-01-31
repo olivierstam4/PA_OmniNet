@@ -1,6 +1,6 @@
 import pytorch_lightning as pl
-from PA_OmniNet.models.pairwise_conv_avg_model import PairwiseConvAvgModel
-from PA_OmniNet.util.shapecheck import ShapeChecker
+from models.pairwise_conv_avg_model import PairwiseConvAvgModel
+from util.shapecheck import ShapeChecker
 import torch
 import torch.nn.functional as F
 import h5py
@@ -35,7 +35,7 @@ def preprocess_context(context_in, context_out):
     return context_in_preprocessed, context_out_preprocessed
 
 
-class CustomH5Dataset(Dataset):
+class OADATDataloader(Dataset):
     def __init__(self, file_path, context_size=4, input_key=None,
                  output_key=None, patient_ids=None):
         super().__init__()
@@ -162,7 +162,6 @@ if __name__ == "__main__":
     current_device = torch.cuda.current_device() if cuda_available else None
     gpu_name = torch.cuda.get_device_name(current_device) if cuda_available else "No GPU"
 
-    # Log the results
     logging.info(f"CUDA Available: {cuda_available}")
     logging.info(f"Current CUDA Device: {current_device if cuda_available else 'N/A'}")
     logging.info(f"GPU Name: {gpu_name}")
@@ -186,9 +185,9 @@ if __name__ == "__main__":
     val_patient_ids = total_patient_ids[-4:-2]
     train_patient_ids = total_patient_ids[:-4]
 
-    train_dataset = CustomH5Dataset(file_path, input_key=input_key, output_key=output_key, patient_ids=train_patient_ids)
-    val_dataset = CustomH5Dataset(file_path, input_key=input_key, output_key=output_key, patient_ids=val_patient_ids)
-    test_dataset = CustomH5Dataset(file_path, input_key=input_key, output_key=output_key, patient_ids=test_patient_ids)
+    train_dataset = OADATDataloader(file_path, input_key=input_key, output_key=output_key, patient_ids=train_patient_ids)
+    val_dataset = OADATDataloader(file_path, input_key=input_key, output_key=output_key, patient_ids=val_patient_ids)
+    test_dataset = OADATDataloader(file_path, input_key=input_key, output_key=output_key, patient_ids=test_patient_ids)
 
     train_loader = DataLoader(train_dataset, batch_size=hparams['batch_size'], shuffle=True, num_workers=num_workers)
     val_loader = DataLoader(val_dataset, batch_size=hparams['batch_size'], shuffle=False, num_workers=num_workers)

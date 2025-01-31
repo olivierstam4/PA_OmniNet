@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 import numpy as np
 import os
-from PA_OmniNet.unet1 import UNet
+from unet1 import UNet
 import logging
 from tqdm import tqdm
 
@@ -39,7 +39,7 @@ START_FILTERS = 32
 MODEL_SAVE_PATH = "unet_model_3hz_Single.pth"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-class NPZDataset(Dataset):
+class Dataloader3hz(Dataset):
     def __init__(self, file_path, normalize=True):
         self.file_path = file_path
         self.normalize = normalize
@@ -68,9 +68,9 @@ if __name__ == '__main__':
     best_val_loss = float('inf')
     early_stop_counter = 0
 
-    train_dataset = NPZDataset(TRAIN_DATASET, normalize=True)
-    val_dataset = NPZDataset(VALID_DATASET, normalize=True)
-    test_dataset = NPZDataset(TEST_DATASET, normalize=True)
+    train_dataset = Dataloader3hz(TRAIN_DATASET, normalize=True)
+    val_dataset = Dataloader3hz(VALID_DATASET, normalize=True)
+    test_dataset = Dataloader3hz(TEST_DATASET, normalize=True)
 
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)

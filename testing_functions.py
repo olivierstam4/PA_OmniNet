@@ -26,16 +26,3 @@ def compute_psnr(image, reference, data_range=1.0):
         return float('inf')
     psnr = 20 * math.log10(data_range / torch.sqrt(mse))
     return psnr
-
-
-# def compute_ssim(image, reference):
-#     norm_img = normalize_min_max(image).detach().cpu().numpy()
-#     norm_ref = normalize_min_max(reference).detach().cpu().numpy()
-#
-#     norm_img = norm_img[0].transpose(1, 2, 0)
-#     norm_ref = norm_ref[0].transpose(1, 2, 0)
-#
-#     data_range = norm_ref.max() - norm_ref.min()
-#
-#     return ssim(norm_img, norm_ref, data_range=1.0, multichannel=True,
-#                 win_size=3)

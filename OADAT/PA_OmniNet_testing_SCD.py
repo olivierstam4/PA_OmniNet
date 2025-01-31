@@ -1,7 +1,7 @@
-from PA_OmniNet.testing_functions import *
+from testing_functions import *
 import pytorch_lightning as pl
-from PA_OmniNet.models.pairwise_conv_avg_model import PairwiseConvAvgModel
-from PA_OmniNet.util.shapecheck import ShapeChecker
+from models.pairwise_conv_avg_model import PairwiseConvAvgModel
+from util.shapecheck import ShapeChecker
 import torch
 import h5py
 import numpy as np
@@ -32,7 +32,7 @@ def preprocess_context(context_in, context_out):
     return context_in_preprocessed, context_out_preprocessed
 
 
-class CustomH5Dataset(Dataset):
+class OADATDataloader_SCD(Dataset):
     def __init__(self, file_path_in, file_path_out, input_key, output_key, indices, context_size=16):
         super().__init__()
         self.file_path_in = file_path_in
@@ -56,7 +56,6 @@ class CustomH5Dataset(Dataset):
         assert len(self.data_input) >= context_size + 1, "Insufficient data for context and target."
         logging.info(f"Loaded {len(self.data_input)} samples from the provided indices.")
 
-        # Precompute context for all samples
         self.context_in = self.global_context_in
         self.context_out = self.global_context_out
         self.context_in, self.context_out = preprocess_context(self.context_in, self.context_out)
@@ -154,7 +153,7 @@ if __name__ == "__main__":
 
     BATCH_SIZE = 1
 
-    test_dataset = CustomH5Dataset(file_path_in, file_path_out, input_key, output_key, test_indices, context_size=16)
+    test_dataset = OADATDataloader_SCD(file_path_in, file_path_out, input_key, output_key, test_indices, context_size=16)
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=6)
 
     model = LightningModel(hparams)

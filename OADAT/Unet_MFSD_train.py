@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 import h5py
 import os
-from PA_OmniNet.unet1 import UNet
+from unet1 import UNet
 import logging
 from tqdm import tqdm
 import numpy as np
@@ -55,7 +55,7 @@ logger.info(f"GPU Name: {gpu_name}")
 num_workers = 18
 
 
-class HDF5Dataset(Dataset):
+class OADATDataloader(Dataset):
     def __init__(self, input_file_path, output_file_path, input_key, output_key, patient_ids=None, normalize=True):
         logger.info(f"Loading dataset for patients {patient_ids} from {input_file_path} and {output_file_path}...")
         self.input_file_path = input_file_path
@@ -104,12 +104,12 @@ if __name__ == '__main__':
     logger.info(f"Different patients: {sorted_patient_ids} \nTraining on patients {train_patient_ids}\nValidating on patients {val_patient_ids}\nTesting on patients       {test_patient_ids} ")
 
 
-    train_dataset = HDF5Dataset(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY,
-                                OUTPUT_KEY, patient_ids=train_patient_ids)
-    val_dataset = HDF5Dataset(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY,
-                              OUTPUT_KEY, patient_ids=val_patient_ids)
-    test_dataset = HDF5Dataset(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY,
-                               OUTPUT_KEY, patient_ids=test_patient_ids)
+    train_dataset = OADATDataloader(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY,
+                                    OUTPUT_KEY, patient_ids=train_patient_ids)
+    val_dataset = OADATDataloader(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY,
+                                  OUTPUT_KEY, patient_ids=val_patient_ids)
+    test_dataset = OADATDataloader(HDF5_INPUT_PATH, HDF5_OUTPUT_PATH, INPUT_KEY,
+                                   OUTPUT_KEY, patient_ids=test_patient_ids)
 
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE,
                               shuffle=True, num_workers=num_workers,
