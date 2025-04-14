@@ -1,5 +1,4 @@
 import torch.nn.functional as F
-from skimage.metrics import structural_similarity as ssim
 import math
 import torch
 def norm_img(x):
