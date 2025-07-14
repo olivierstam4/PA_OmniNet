@@ -4,7 +4,7 @@
 This code was used as part of the work presented in 
 
 Olivier J.M. Stam, Kalloor Joseph Francis* and Navchetan Awasthi* "PA OmniNet: A Retraining-Free, Generalizable Deep Learning
-Framework for Robust Photoacoustic Image Reconstruction” Available at SSRN: https://ssrn.com/abstract=5158042 or http://dx.doi.org/10.2139/ssrn.5158042
+Framework for Robust Photoacoustic Image Reconstruction” Available at Photoacoustics: https://www.sciencedirect.com/science/article/pii/S2213597925000631
 
 
 * Authors contributed equally
